@@ -41,8 +41,22 @@ export default function Gerenciar({ navigation }) {
                 </View>
             </View>
             <View style={styles.blocoCompleto}>
-                <Text style={styles.text}>Ultima confissão: {formatarData(dados?.basico[0]?.dataUltimaConfissao)}</Text>
-                <Text style={styles.titulo}>Seu máximo: {dados?.basico[0]?.maximoDiasSemPecado} dia(s)</Text>
+                <Text style={styles.text}>Última confissão: {formatarData(dados?.basico[0]?.dataUltimaConfissao)}</Text>
+                <Text style={styles.text}>Último dia em estado de graça: {dados?.basico[0]?.dataDiaSemPecado}</Text>
+                <Text style={styles.text}>Máximo de dias em estado de graça: {dados?.basico[0]?.maximoDiasSemPecado} dia(s)</Text>
+            </View>
+            <Text style={styles.textoInformativo}>Esses são os três mandamentos com mais registros de pecado:</Text>
+            <View style={styles.blocoCompleto}>
+                <Text style={styles.textBold}>{dados?.maisCometidos[0]?.referente}</Text>
+                <Text style={styles.text}>Quantidade total: {dados?.maisCometidos[0]?.quantidade}</Text>
+            </View>
+            <View style={styles.blocoCompleto}>
+                <Text style={styles.textBold}>{dados?.maisCometidos[1]?.referente}</Text>
+                <Text style={styles.text}>Quantidade total: {dados?.maisCometidos[1]?.quantidade}</Text>
+            </View>
+            <View style={styles.blocoCompleto}>
+                <Text style={styles.textBold}>{dados?.maisCometidos[2]?.referente}</Text>
+                <Text style={styles.text}>Quantidade total: {dados?.maisCometidos[2]?.quantidade}</Text>
             </View>
         </View>
     )
@@ -75,7 +89,7 @@ const styles = StyleSheet.create({
         margin: 10
     },
     textoInformativo: {
-        fontSize: 12,
+        fontSize: 14,
         color: 'white',
         width: '90%',
         margin: 10

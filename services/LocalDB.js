@@ -42,7 +42,19 @@ export default class DataManager {
             { referente: "vazio", quantidade: 0 },
             { referente: "vazio", quantidade: 0 },
             { referente: "vazio", quantidade: 0 }
-        ]
+        ],
+        historicoPecados: { // NOVA ESTRUTURA - NÃO É ZERADA
+            primeiro: 0,
+            segundo: 0,
+            terceiro: 0,
+            quarto: 0,
+            quinto: 0,
+            sexto: 0,
+            sétimo: 0,
+            oitavo: 0,
+            nono: 0,
+            décimo: 0
+        }
     };
 
     // --------------------------------------------------------------
@@ -63,10 +75,15 @@ export default class DataManager {
             dados.basico[0].maximoDiasSemPecado = dados.basico[0].maximoDiasSemPecado || 0;
             dados.basico[0].diasSemPecado = dados.basico[0].diasSemPecado || 0;
 
+            // MIGRAÇÃO: Garante que historicoPecados existe
+            if (!dados.historicoPecados) {
+                dados.historicoPecados = { ...DataManager.estruturaInicial.historicoPecados };
+            }
+
             DataManager.atualizarQuantidadeGeral(dados);
             DataManager.atualizarDataDiaSemPecado(dados);
             DataManager.atualizarDiasSemPecado(dados);
-            DataManager.atualizarMaisCometidos(dados);
+            DataManager.atualizarMaisCometidos(dados); // Agora usa historicoPecados
 
             await AsyncStorage.setItem(DataManager.STORAGE_KEY, JSON.stringify(dados));
 
@@ -101,6 +118,9 @@ export default class DataManager {
 
             if (dados.pecados[tipoPecado] !== undefined) {
                 dados.pecados[tipoPecado] += 1;
+
+                // ATUALIZA O HISTÓRICO (não zera)
+                dados.historicoPecados[tipoPecado] += 1;
 
                 dados.basico[0].diasSemPecado = 0;
 
@@ -138,10 +158,10 @@ export default class DataManager {
             const dados = await DataManager.load();
 
             Object.keys(dados.pecados).forEach(key => {
-                dados.pecados[key] = 0;
+                dados.pecados[key] = 0; // Zera apenas os pecados atuais
+                // historicoPecados NÃO é zerado
             });
 
-            // ATUALIZA A DATA DA ÚLTIMA CONFISSÃO
             DataManager.atualizarDataUltimaConfissao(dados);
 
             await DataManager.save(dados);
@@ -152,17 +172,15 @@ export default class DataManager {
         }
     }
 
-    // NOVA FUNÇÃO: Atualiza a data da última confissão
     static async registrarConfissao() {
         try {
             const dados = await DataManager.load();
 
-            // Zera todos os pecados
             Object.keys(dados.pecados).forEach(key => {
-                dados.pecados[key] = 0;
+                dados.pecados[key] = 0; // Zera apenas os pecados atuais
+                // historicoPecados NÃO é zerado
             });
 
-            // Atualiza a data da última confissão
             DataManager.atualizarDataUltimaConfissao(dados);
 
             await DataManager.save(dados);
@@ -191,7 +209,8 @@ export default class DataManager {
     }
 
     static atualizarMaisCometidos(dados) {
-        const lista = Object.entries(dados.pecados)
+        // AGORA USA historicoPecados EM VEZ DE pecados
+        const lista = Object.entries(dados.historicoPecados)
             .map(([pecado, quantidade]) => ({
                 referente: DataManager.mandatoPorPecado[pecado],
                 quantidade

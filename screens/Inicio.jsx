@@ -73,7 +73,7 @@ export default function Inicio({ navigation }) {
                 <Text style={styles.titulo}>
                     Em estado de graça
                 </Text>
-                <Text style={styles.text}>Ultima confissão: {dataUltimaConfissao}</Text>
+                <Text style={styles.text}>Última confissão: {dataUltimaConfissao}</Text>
                 <Text style={styles.text}>Você está há {dados?.basico[0]?.diasSemPecado} dia(s) em estado de graça.</Text>
             </View>
             <View style={styles.divMetade}>
