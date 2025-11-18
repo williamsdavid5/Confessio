@@ -5,7 +5,7 @@ export default function Inicio({ navigation }) {
         <View style={styles.container}>
             <View style={styles.divMetade}>
                 <Text style={styles.titulo}>
-                    Tudo tranquilo
+                    Em estado de graça
                 </Text>
             </View>
             <View style={styles.divMetade}>
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
         color: 'white'
     },
     titulo: {
-        fontFamily: 'OpenSans',
+        fontFamily: 'OpenSansBold',
         color: 'white',
         fontSize: 24
     },
