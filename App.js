@@ -23,6 +23,7 @@ export default function App() {
 
   const [fontsLoaded] = useFonts({
     'OpenSans': require('./assets/fonts/OpenSans-Regular.ttf'),
+    'OpenSansBold': require('./assets/fonts/OpenSans-Bold.ttf'),
   });
 
   async function initializeApp() {
@@ -48,7 +49,18 @@ export default function App() {
       <StatusBar style="light" />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name='Inicio' component={Inicio} />
-        <Stack.Screen name='Registrar_P' component={Registros_P} />
+        <Stack.Screen
+          name='Registrar_P'
+          component={Registros_P}
+          options={{
+            headerShown: true,
+            title: '',
+            headerStyle: {
+              backgroundColor: '#000000',
+            },
+            headerTintColor: '#ffffff'
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -63,7 +75,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'black',
     alignItems: 'center',
     justifyContent: 'center',
   },

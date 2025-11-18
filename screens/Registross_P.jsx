@@ -21,8 +21,8 @@ export default function Registros_P({ navigation }) {
     async function adicionarPecado(tipoPecado) {
 
         const confirma = await mostrarConfirmacao(
-            "Confirme",
-            "Uma vez adicionado, só é removido na confissã. Tem certeza que quer adicionar?"
+            "Tem certeza?",
+            "Uma vez adicionado, não é possível subtrair. Todos são zerados ao registrar uma confissão."
         )
 
         if (confirma) {
@@ -84,18 +84,23 @@ export default function Registros_P({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Pressable style={styles.botao} onPress={() => navigation.goBack()}>
-                <Text style={styles.text}>Voltar</Text>
-            </Pressable>
-            <View style={styles.itemPecado}>
-                <Text style={styles.text}>
-                    {pecados[0]?.[1]}
-                    Quantidade: {getQuantidadePecado("primeiro")}
-                </Text>
-                <Pressable style={styles.botaoAdicionar} onPress={() => adicionarPecado("primeiro")}>
-                    <Text style={styles.text}>+</Text>
-                </Pressable>
-            </View>
+            {pecados.map(([chave, descricao], index) => (
+                <View key={chave} style={styles.itemPecado}>
+                    <View style={styles.itemPecadoEsquerda}>
+                        <Text style={styles.textBold}>
+                            {descricao}
+                        </Text>
+                        <Text style={styles.textItemPecado}>
+                            Quantidade atual: {getQuantidadePecado(chave)}
+                        </Text>
+                    </View>
+                    <View style={styles.itemPecadoDireita}>
+                        <Pressable style={styles.botaoAdicionar} onPress={() => adicionarPecado(chave)}>
+                            <Text style={styles.text}>+</Text>
+                        </Pressable>
+                    </View>
+                </View>
+            ))}
         </View>
     )
 }
@@ -114,7 +119,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     text: {
-        fontSize: 18,
+        fontSize: 14,
         color: 'white'
     },
     titulo: {
@@ -146,12 +151,26 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         flexDirection: 'row',
-        padding: 10
+        padding: 10,
+        marginBottom: 14
     },
     botaoAdicionar: {
-        width: 40,
-        height: '100%',
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center'
+    },
+    textItemPecado: {
+        fontSize: 14,
+        color: 'white'
+    },
+    itemPecadoEsquerda: {
+        width: '85%'
+    },
+    itemPecadoDireita: {
+        width: '15%'
+    },
+    textBold: {
+        fontFamily: 'OpenSansBold',
+        color: 'white'
     }
 });

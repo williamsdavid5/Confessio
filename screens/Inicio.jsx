@@ -50,12 +50,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     text: {
-        fontSize: 18,
+        fontSize: 14,
         color: 'white'
     },
     titulo: {
         fontFamily: 'OpenSans',
-        color: 'white'
+        color: 'white',
+        fontSize: 24
     },
     botao: {
         backgroundColor: 'black',
@@ -72,6 +73,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: 'white',
         width: '90%',
-        margin: 10,
+        marginTop: 50,
     }
 });
