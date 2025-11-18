@@ -21,7 +21,9 @@ export default class DataManager {
             {
                 quantidadeGeral: 0,
                 dataUltimaConfissao: "",
-                dataDiaSemPecado: ""
+                dataDiaSemPecado: "",
+                maximoDiasSemPecado: 0,
+                diasSemPecado: 0
             }
         ],
         pecados: {
@@ -58,10 +60,12 @@ export default class DataManager {
 
             const dados = JSON.parse(json);
 
+            dados.basico[0].maximoDiasSemPecado = dados.basico[0].maximoDiasSemPecado || 0;
+            dados.basico[0].diasSemPecado = dados.basico[0].diasSemPecado || 0;
+
             DataManager.atualizarQuantidadeGeral(dados);
-
             DataManager.atualizarDataDiaSemPecado(dados);
-
+            DataManager.atualizarDiasSemPecado(dados);
             DataManager.atualizarMaisCometidos(dados);
 
             await AsyncStorage.setItem(DataManager.STORAGE_KEY, JSON.stringify(dados));
@@ -79,6 +83,7 @@ export default class DataManager {
         try {
             DataManager.atualizarQuantidadeGeral(dados);
             DataManager.atualizarDataDiaSemPecado(dados);
+            DataManager.atualizarDiasSemPecado(dados);
             DataManager.atualizarMaisCometidos(dados);
 
             await AsyncStorage.setItem(DataManager.STORAGE_KEY, JSON.stringify(dados));
@@ -96,6 +101,8 @@ export default class DataManager {
 
             if (dados.pecados[tipoPecado] !== undefined) {
                 dados.pecados[tipoPecado] += 1;
+
+                dados.basico[0].diasSemPecado = 0;
 
                 await DataManager.save(dados);
                 return dados;
@@ -134,10 +141,34 @@ export default class DataManager {
                 dados.pecados[key] = 0;
             });
 
+            // ATUALIZA A DATA DA ÚLTIMA CONFISSÃO
+            DataManager.atualizarDataUltimaConfissao(dados);
+
             await DataManager.save(dados);
             return dados;
         } catch (error) {
             console.error('Erro ao zerar pecados:', error);
+            return null;
+        }
+    }
+
+    // NOVA FUNÇÃO: Atualiza a data da última confissão
+    static async registrarConfissao() {
+        try {
+            const dados = await DataManager.load();
+
+            // Zera todos os pecados
+            Object.keys(dados.pecados).forEach(key => {
+                dados.pecados[key] = 0;
+            });
+
+            // Atualiza a data da última confissão
+            DataManager.atualizarDataUltimaConfissao(dados);
+
+            await DataManager.save(dados);
+            return dados;
+        } catch (error) {
+            console.error('Erro ao registrar confissão:', error);
             return null;
         }
     }
@@ -155,6 +186,10 @@ export default class DataManager {
         }
     }
 
+    static atualizarDataUltimaConfissao(dados) {
+        dados.basico[0].dataUltimaConfissao = DataManager.getHoje();
+    }
+
     static atualizarMaisCometidos(dados) {
         const lista = Object.entries(dados.pecados)
             .map(([pecado, quantidade]) => ({
@@ -165,6 +200,23 @@ export default class DataManager {
             .slice(0, 3);
 
         dados.maisCometidos = lista;
+    }
+
+    static atualizarDiasSemPecado(dados) {
+        if (dados.basico[0].quantidadeGeral === 0 && dados.basico[0].dataDiaSemPecado) {
+            const hoje = new Date();
+            const dataSemPecado = new Date(dados.basico[0].dataDiaSemPecado);
+            const diffTime = hoje.getTime() - dataSemPecado.getTime();
+            const diffDias = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            dados.basico[0].diasSemPecado = Math.max(0, diffDias);
+
+            if (dados.basico[0].diasSemPecado > dados.basico[0].maximoDiasSemPecado) {
+                dados.basico[0].maximoDiasSemPecado = dados.basico[0].diasSemPecado;
+            }
+        } else {
+            dados.basico[0].diasSemPecado = 0;
+        }
     }
 
     // --------------------------------------------------------------
