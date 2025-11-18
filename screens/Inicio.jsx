@@ -1,22 +1,36 @@
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Button } from "react-native-web";
 
-export default function ({ navigation }) {
+export default function Inicio({ navigation }) {
     return (
         <View style={styles.container}>
-            <h1 style={styles.titulo}>
-                Tudo tranquilo
-            </h1>
-            <Button
-                style={styles.botao}
-                title="Registro p"
-                onPress={() => navigation.navigate('Registrar_P')}
-            ></Button>
-            <Pressable
-                style={styles.botao}
-            >
-                <Text style={styles.text}>Ir para registros</Text>
-            </Pressable>
+            <View style={styles.divMetade}>
+                <Text style={styles.titulo}>
+                    Tudo tranquilo
+                </Text>
+            </View>
+            <View style={styles.divMetade}>
+                <Pressable
+                    style={styles.botao}
+                    onPress={() => navigation.navigate('Registrar_P')}
+                >
+                    <Text style={styles.text}>Registrar</Text>
+                </Pressable>
+                <Pressable
+                    style={styles.botao}
+                    onPress={() => navigation.navigate('Registrar_P')}
+                >
+                    <Text style={styles.text}>Registrar Confissão</Text>
+                </Pressable>
+                <Pressable
+                    style={styles.botao}
+                    onPress={() => navigation.navigate('Registrar_P')}
+                >
+                    <Text style={styles.text}>Gerenciar</Text>
+                </Pressable>
+                <Text style={styles.textoInformativo}>
+                    Atenção: Para garantir a sua privacidade, todos os dados registrados no app são guardados em armazenamento local. Muito cuidado ao apagar este app ou formatar o seu celular.
+                </Text>
+            </View>
         </View>
     )
 }
@@ -27,18 +41,37 @@ const styles = StyleSheet.create({
         backgroundColor: 'black',
         alignItems: 'center',
         justifyContent: 'center',
-        color: 'white',
+    },
+    divMetade: {
+        width: '100%',
+        height: '50%',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     text: {
         fontSize: 18,
         color: 'white'
     },
     titulo: {
-        fontFamily: 'OpenSans'
+        fontFamily: 'OpenSans',
+        color: 'white'
     },
     botao: {
         backgroundColor: 'black',
+        borderColor: '#5d5d5d',
+        borderWidth: 1,
+        padding: 5,
+        width: 250,
+        height: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: 10
+    },
+    textoInformativo: {
+        fontSize: 12,
         color: 'white',
-        borderColor: '#007BFF',
+        width: '90%',
+        margin: 10,
     }
 });
