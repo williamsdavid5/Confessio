@@ -242,6 +242,10 @@ export default class DataManager {
 
     static getHoje() {
         const d = new Date();
+
+        const offset = d.getTimezoneOffset();
+        d.setMinutes(d.getMinutes() - offset);
+
         return d.toISOString().split("T")[0];
     }
 }

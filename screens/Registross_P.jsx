@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
+import { View, Text, StyleSheet, Pressable, Alert, ScrollView } from "react-native";
 import LocalDB from '../services/LocalDB';
 import { useState, useEffect } from "react";
 
@@ -83,7 +83,11 @@ export default function Registros_P({ navigation }) {
 
 
     return (
-        <View style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={true}
+        >
             {pecados.map(([chave, descricao], index) => (
                 <View key={chave} style={styles.itemPecado}>
                     <View style={styles.itemPecadoEsquerda}>
@@ -101,7 +105,7 @@ export default function Registros_P({ navigation }) {
                     </View>
                 </View>
             ))}
-        </View>
+        </ScrollView>
     )
 }
 
@@ -109,8 +113,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'black',
+        // alignItems: 'center',
+        // justifyContent: 'center',
+    },
+    scrollContent: {
         alignItems: 'center',
-        justifyContent: 'center',
+        paddingVertical: 20, // Espaço no topo e base
     },
     divMetade: {
         width: '100%',
@@ -147,7 +155,7 @@ const styles = StyleSheet.create({
         borderColor: '#5d5d5d',
         borderWidth: 1,
         width: '90%',
-        height: 60,
+        // height: 200,
         alignItems: 'center',
         justifyContent: 'space-between',
         flexDirection: 'row',

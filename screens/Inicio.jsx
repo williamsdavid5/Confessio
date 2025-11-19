@@ -1,11 +1,15 @@
-import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
+import { View, Text, StyleSheet, Pressable, Alert, Image } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import { useState, useEffect } from "react";
 import LocalDB from '../services/LocalDB';
+import Pecado from '../assets/pecado.png';
+import Graca from '../assets/graca.png';
 
 export default function Inicio({ navigation }) {
 
     const [dados, setDados] = useState();
     const [dataUltimaConfissao, setDataUltimaConfissao] = useState("");
+    const isFocused = useIsFocused();
 
     async function carregarDados() {
         try {
@@ -27,8 +31,10 @@ export default function Inicio({ navigation }) {
     }
 
     useEffect(() => {
-        carregarDados();
-    }, []);
+        if (isFocused) {
+            carregarDados();
+        }
+    }, [isFocused]);
 
     function mostrarConfirmacao(titulo, mensagem) {
         return new Promise((resolve) => {
@@ -52,7 +58,7 @@ export default function Inicio({ navigation }) {
     }
 
 
-    async function registarConfissao() {
+    async function registrarConfissao() {
         const confirma = await mostrarConfirmacao(
             "Tem certeza?",
             "Ao registrar uma confissão, todos os pecados mortais serão zerados, isso não pode ser desfeito."
@@ -60,23 +66,44 @@ export default function Inicio({ navigation }) {
 
         if (confirma) {
             try {
-                await LocalDB.registrarConfissao();
+                const novosDados = await LocalDB.registrarConfissao();
+                if (novosDados) {
+                    setDados(novosDados);
+                    setDataUltimaConfissao(formatarData(novosDados?.basico[0]?.dataUltimaConfissao) || "Nunca");
+                    Alert.alert("Sucesso", "Confissão registrada!");
+                }
             } catch (error) {
                 console.error('Erro ao registrar confissão:', error);
+                Alert.alert("Erro", "Não foi possível registrar a confissão");
             }
         }
     }
 
     return (
         <View style={styles.container}>
-            <View style={styles.divMetade}>
-                <Text style={styles.titulo}>
-                    Em estado de graça
-                </Text>
-                <Text style={styles.text}>Última confissão: {dataUltimaConfissao}</Text>
-                <Text style={styles.text}>Você está há {dados?.basico[0]?.diasSemPecado} dia(s) em estado de graça.</Text>
+            <View style={styles.divMetadeCima}>
+                {dados?.basico[0]?.quantidadeGeral > 0 ? (
+                    <>
+                        <Image source={Pecado} style={styles.pecadoImagem}></Image>
+                        <Text style={styles.titulo}>
+                            Você precisa se confessar!
+                        </Text>
+                        <Text style={styles.text}>Pecados pendentes: {dados?.basico[0]?.quantidadeGeral}</Text>
+                        <Text style={styles.text}>Última confissão: {dataUltimaConfissao}</Text>
+                    </>
+                ) : (
+                    <>
+                        <Image source={Graca} style={styles.gracaImagem}></Image>
+                        <Text style={styles.titulo}></Text>
+                        <Text style={styles.titulo}>
+                            Em estado de graça
+                        </Text>
+                        <Text style={styles.text}>Última confissão: {dataUltimaConfissao}</Text>
+                        <Text style={styles.text}>Você está há {dados?.basico[0]?.diasSemPecado} dia(s) em estado de graça.</Text>
+                    </>
+                )}
             </View>
-            <View style={styles.divMetade}>
+            <View style={styles.divMetadeBaixo}>
                 <Pressable
                     style={styles.botao}
                     onPress={() => navigation.navigate('Registrar_P')}
@@ -85,7 +112,7 @@ export default function Inicio({ navigation }) {
                 </Pressable>
                 <Pressable
                     style={styles.botao}
-                    onPress={() => registarConfissao()}
+                    onPress={() => registrarConfissao()}
                 >
                     <Text style={styles.text}>Registrar Confissão</Text>
                 </Pressable>
@@ -110,12 +137,23 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    divMetade: {
+    divMetadeCima: {
         width: '100%',
-        height: '50%',
+        height: '65%',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'flex-end',
+        // backgroundColor: 'blue',
+        padding: 10
+    },
+    divMetadeBaixo: {
+        width: '100%',
+        height: '35%',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        // backgroundColor: 'gray',
+        padding: 10
     },
     text: {
         fontSize: 14,
@@ -141,6 +179,22 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: 'white',
         width: '90%',
-        marginTop: 50,
+        marginTop: 10,
+    },
+    pecadoImagem: {
+        // width: 100,
+        // height: '60%',
+        flex: 1,
+        objectFit: 'contain',
+        marginTop: 70,
+        marginBottom: 40
+    },
+    gracaImagem: {
+        // width: 100,
+        // height: '60%',
+        flex: 1,
+        objectFit: 'contain',
+        marginTop: 70,
+        marginBottom: 0
     }
 });
