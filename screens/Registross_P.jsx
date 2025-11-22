@@ -9,10 +9,9 @@ export default function Registros_P({ navigation }) {
 
     async function carregarDados() {
         try {
-            const lista = Object.entries(LocalDB.mandatoPorPecado);
             const dadosBD = await LocalDB.load();
             setDados(dadosBD);
-            setPecados(lista);
+            setPecados(dadosBD?.estatisticasPecados || []);
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
         }
@@ -39,8 +38,10 @@ export default function Registros_P({ navigation }) {
     }
 
     function getQuantidadePecado(tipoPecado) {
-        return dados?.pecados?.[tipoPecado] ?? 0;
+        const pecado = dados?.estatisticasPecados?.find(p => p.chave === tipoPecado);
+        return pecado?.quantidade ?? 0;
     }
+
 
     function mostrarConfirmacao(titulo, mensagem) {
         return new Promise((resolve) => {
@@ -86,20 +87,20 @@ export default function Registros_P({ navigation }) {
         <ScrollView
             style={styles.container}
             contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={true}
+            showsVerticalScrollIndicator={false}
         >
-            {pecados.map(([chave, descricao], index) => (
-                <View key={chave} style={styles.itemPecado}>
+            {pecados.map((pecado, index) => (
+                <View key={pecado.chave} style={styles.itemPecado}>
                     <View style={styles.itemPecadoEsquerda}>
                         <Text style={styles.textBold}>
-                            {descricao}
+                            {pecado.nome}
                         </Text>
                         <Text style={styles.textItemPecado}>
-                            Quantidade atual: {getQuantidadePecado(chave)}
+                            Quantidade atual: {pecado.quantidade}
                         </Text>
                     </View>
                     <View style={styles.itemPecadoDireita}>
-                        <Pressable style={styles.botaoAdicionar} onPress={() => adicionarPecado(chave)}>
+                        <Pressable style={styles.botaoAdicionar} onPress={() => adicionarPecado(pecado.chave)}>
                             <Text style={styles.text}>+</Text>
                         </Pressable>
                     </View>

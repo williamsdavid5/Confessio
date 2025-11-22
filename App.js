@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Inicio from './screens/Inicio';
 import Registros_P from './screens/Registross_P';
 import Gerenciar from './screens/Gerenciar';
+import EditarDados from './screens/EditarDados';
 
 import LocalDB from './services/LocalDB';
 
@@ -65,6 +66,18 @@ export default function App() {
         <Stack.Screen
           name='Gerenciar'
           component={Gerenciar}
+          options={{
+            headerShown: true,
+            title: '',
+            headerStyle: {
+              backgroundColor: '#000000',
+            },
+            headerTintColor: '#ffffff'
+          }}
+        />
+        <Stack.Screen
+          name='EditarDados'
+          component={EditarDados}
           options={{
             headerShown: true,
             title: '',

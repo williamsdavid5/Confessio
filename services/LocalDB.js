@@ -21,29 +21,25 @@ export default class DataManager {
             {
                 quantidadeGeral: 0,
                 dataUltimaConfissao: "",
-                dataDiaSemPecado: "",
+                dataInicioSequencia: "",
                 maximoDiasSemPecado: 0,
                 diasSemPecado: 0
             }
         ],
-        pecados: {
-            primeiro: 0,
-            segundo: 0,
-            terceiro: 0,
-            quarto: 0,
-            quinto: 0,
-            sexto: 0,
-            sétimo: 0,
-            oitavo: 0,
-            nono: 0,
-            décimo: 0
-        },
-        maisCometidos: [
-            { referente: "vazio", quantidade: 0 },
-            { referente: "vazio", quantidade: 0 },
-            { referente: "vazio", quantidade: 0 }
+
+        estatisticasPecados: [
+            { chave: "primeiro", nome: "Amar a Deus sobre todas as coisas.", quantidade: 0, porcentagem: 0 },
+            { chave: "segundo", nome: "Não tomar seu santo nome em vão.", quantidade: 0, porcentagem: 0 },
+            { chave: "terceiro", nome: "Guardar domingos e festas.", quantidade: 0, porcentagem: 0 },
+            { chave: "quarto", nome: "Honrar pai e mãe.", quantidade: 0, porcentagem: 0 },
+            { chave: "quinto", nome: "Não matar.", quantidade: 0, porcentagem: 0 },
+            { chave: "sexto", nome: "Não pecar contra a castidade.", quantidade: 0, porcentagem: 0 },
+            { chave: "sétimo", nome: "Não furtar.", quantidade: 0, porcentagem: 0 },
+            { chave: "oitavo", nome: "Não levantar falso testemunho.", quantidade: 0, porcentagem: 0 },
+            { chave: "nono", nome: "Não desejar a mulher do próximo.", quantidade: 0, porcentagem: 0 },
+            { chave: "décimo", nome: "Não cobiçar as coisas alheias.", quantidade: 0, porcentagem: 0 }
         ],
-        historicoPecados: { // NOVA ESTRUTURA - NÃO É ZERADA
+        historicoPecados: {
             primeiro: 0,
             segundo: 0,
             terceiro: 0,
@@ -65,7 +61,7 @@ export default class DataManager {
 
             if (!json) {
                 const inicial = DataManager.estruturaInicial;
-                inicial.basico[0].dataDiaSemPecado = DataManager.getHoje();
+                inicial.basico[0].dataInicioSequencia = DataManager.getHoje();
                 await AsyncStorage.setItem(DataManager.STORAGE_KEY, JSON.stringify(inicial));
                 return inicial;
             }
@@ -75,15 +71,33 @@ export default class DataManager {
             dados.basico[0].maximoDiasSemPecado = dados.basico[0].maximoDiasSemPecado || 0;
             dados.basico[0].diasSemPecado = dados.basico[0].diasSemPecado || 0;
 
-            // MIGRAÇÃO: Garante que historicoPecados existe
             if (!dados.historicoPecados) {
                 dados.historicoPecados = { ...DataManager.estruturaInicial.historicoPecados };
             }
 
+            if (dados.pecados && !dados.estatisticasPecados) {
+                dados.estatisticasPecados = DataManager.estruturaInicial.estatisticasPecados.map(pecado => ({
+                    ...pecado,
+                    quantidade: dados.pecados[pecado.chave] || 0
+                }));
+                delete dados.pecados;
+                delete dados.maisCometidos;
+            }
+
+            if (dados.basico[0].dataDiaSemPecado) {
+                if (!dados.basico[0].dataInicioSequencia) {
+                    dados.basico[0].dataInicioSequencia = dados.basico[0].dataDiaSemPecado;
+                }
+                delete dados.basico[0].dataDiaSemPecado;
+            }
+
+            if (!dados.basico[0].dataInicioSequencia && dados.basico[0].quantidadeGeral === 0) {
+                dados.basico[0].dataInicioSequencia = DataManager.getHoje();
+            }
+
             DataManager.atualizarQuantidadeGeral(dados);
-            DataManager.atualizarDataDiaSemPecado(dados);
             DataManager.atualizarDiasSemPecado(dados);
-            DataManager.atualizarMaisCometidos(dados); // Agora usa historicoPecados
+            DataManager.atualizarPorcentagens(dados);
 
             await AsyncStorage.setItem(DataManager.STORAGE_KEY, JSON.stringify(dados));
 
@@ -99,9 +113,8 @@ export default class DataManager {
     static async save(dados) {
         try {
             DataManager.atualizarQuantidadeGeral(dados);
-            DataManager.atualizarDataDiaSemPecado(dados);
             DataManager.atualizarDiasSemPecado(dados);
-            DataManager.atualizarMaisCometidos(dados);
+            DataManager.atualizarPorcentagens(dados);
 
             await AsyncStorage.setItem(DataManager.STORAGE_KEY, JSON.stringify(dados));
             return true;
@@ -116,12 +129,15 @@ export default class DataManager {
         try {
             const dados = await DataManager.load();
 
-            if (dados.pecados[tipoPecado] !== undefined) {
-                dados.pecados[tipoPecado] += 1;
+            const pecadoIndex = dados.estatisticasPecados.findIndex(p => p.chave === tipoPecado);
 
-                // ATUALIZA O HISTÓRICO (não zera)
+            if (pecadoIndex !== -1) {
+
+                dados.estatisticasPecados[pecadoIndex].quantidade += 1;
+
                 dados.historicoPecados[tipoPecado] += 1;
 
+                dados.basico[0].dataInicioSequencia = "";
                 dados.basico[0].diasSemPecado = 0;
 
                 await DataManager.save(dados);
@@ -139,9 +155,10 @@ export default class DataManager {
     static async removerPecado(tipoPecado) {
         try {
             const dados = await DataManager.load();
+            const pecadoIndex = dados.estatisticasPecados.findIndex(p => p.chave === tipoPecado);
 
-            if (dados.pecados[tipoPecado] !== undefined && dados.pecados[tipoPecado] > 0) {
-                dados.pecados[tipoPecado] -= 1;
+            if (pecadoIndex !== -1 && dados.estatisticasPecados[pecadoIndex].quantidade > 0) {
+                dados.estatisticasPecados[pecadoIndex].quantidade -= 1;
 
                 await DataManager.save(dados);
                 return dados;
@@ -153,33 +170,16 @@ export default class DataManager {
         }
     }
 
-    static async zerarPecados() {
-        try {
-            const dados = await DataManager.load();
-
-            Object.keys(dados.pecados).forEach(key => {
-                dados.pecados[key] = 0; // Zera apenas os pecados atuais
-                // historicoPecados NÃO é zerado
-            });
-
-            DataManager.atualizarDataUltimaConfissao(dados);
-
-            await DataManager.save(dados);
-            return dados;
-        } catch (error) {
-            console.error('Erro ao zerar pecados:', error);
-            return null;
-        }
-    }
-
     static async registrarConfissao() {
         try {
             const dados = await DataManager.load();
 
-            Object.keys(dados.pecados).forEach(key => {
-                dados.pecados[key] = 0; // Zera apenas os pecados atuais
-                // historicoPecados NÃO é zerado
+            dados.estatisticasPecados.forEach(pecado => {
+                pecado.quantidade = 0;
             });
+
+            dados.basico[0].dataInicioSequencia = DataManager.getHoje();
+            dados.basico[0].diasSemPecado = 0;
 
             DataManager.atualizarDataUltimaConfissao(dados);
 
@@ -191,41 +191,60 @@ export default class DataManager {
         }
     }
 
+    static async zerarPecados() {
+        try {
+            const dados = await DataManager.load();
+
+            dados.estatisticasPecados.forEach(pecado => {
+                pecado.quantidade = 0;
+            });
+
+            dados.basico[0].dataInicioSequencia = DataManager.getHoje();
+            dados.basico[0].diasSemPecado = 0;
+
+            DataManager.atualizarDataUltimaConfissao(dados);
+
+            await DataManager.save(dados);
+            return dados;
+        } catch (error) {
+            console.error('Erro ao zerar pecados:', error);
+            return null;
+        }
+    }
+
     // --------------------------------------------------------------
 
     static atualizarQuantidadeGeral(dados) {
-        const soma = Object.values(dados.pecados).reduce((a, b) => a + b, 0);
+        const soma = dados.estatisticasPecados.reduce((total, pecado) => total + pecado.quantidade, 0);
         dados.basico[0].quantidadeGeral = soma;
-    }
-
-    static atualizarDataDiaSemPecado(dados) {
-        if (dados.basico[0].quantidadeGeral === 0) {
-            dados.basico[0].dataDiaSemPecado = DataManager.getHoje();
-        }
     }
 
     static atualizarDataUltimaConfissao(dados) {
         dados.basico[0].dataUltimaConfissao = DataManager.getHoje();
     }
 
-    static atualizarMaisCometidos(dados) {
-        // AGORA USA historicoPecados EM VEZ DE pecados
-        const lista = Object.entries(dados.historicoPecados)
-            .map(([pecado, quantidade]) => ({
-                referente: DataManager.mandatoPorPecado[pecado],
-                quantidade
-            }))
-            .sort((a, b) => b.quantidade - a.quantidade)
-            .slice(0, 3);
+    static atualizarPorcentagens(dados) {
+        const totalHistorico = Object.values(dados.historicoPecados).reduce((a, b) => a + b, 0);
 
-        dados.maisCometidos = lista;
+        dados.estatisticasPecados.forEach(pecado => {
+            const quantidadeHistorico = dados.historicoPecados[pecado.chave] || 0;
+            pecado.porcentagem = totalHistorico > 0 ?
+                Math.round((quantidadeHistorico / totalHistorico) * 100) : 0;
+        });
+
+        dados.estatisticasPecados.sort((a, b) => {
+            const historicoA = dados.historicoPecados[a.chave] || 0;
+            const historicoB = dados.historicoPecados[b.chave] || 0;
+            return historicoB - historicoA;
+        });
     }
 
     static atualizarDiasSemPecado(dados) {
-        if (dados.basico[0].quantidadeGeral === 0 && dados.basico[0].dataDiaSemPecado) {
+        if (dados.basico[0].quantidadeGeral === 0 && dados.basico[0].dataInicioSequencia) {
             const hoje = new Date();
-            const dataSemPecado = new Date(dados.basico[0].dataDiaSemPecado);
-            const diffTime = hoje.getTime() - dataSemPecado.getTime();
+            const dataInicio = new Date(dados.basico[0].dataInicioSequencia);
+
+            const diffTime = hoje.getTime() - dataInicio.getTime();
             const diffDias = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
             dados.basico[0].diasSemPecado = Math.max(0, diffDias);
@@ -233,7 +252,12 @@ export default class DataManager {
             if (dados.basico[0].diasSemPecado > dados.basico[0].maximoDiasSemPecado) {
                 dados.basico[0].maximoDiasSemPecado = dados.basico[0].diasSemPecado;
             }
-        } else {
+        }
+        else if (dados.basico[0].quantidadeGeral === 0 && !dados.basico[0].dataInicioSequencia) {
+            dados.basico[0].dataInicioSequencia = DataManager.getHoje();
+            dados.basico[0].diasSemPecado = 0;
+        }
+        else {
             dados.basico[0].diasSemPecado = 0;
         }
     }
@@ -242,10 +266,95 @@ export default class DataManager {
 
     static getHoje() {
         const d = new Date();
-
         const offset = d.getTimezoneOffset();
         d.setMinutes(d.getMinutes() - offset);
-
         return d.toISOString().split("T")[0];
+    }
+
+    static getTop3MaisCometidos(dados) {
+        return dados.estatisticasPecados.slice(0, 3);
+    }
+
+    static getPecadoPorChave(dados, chave) {
+        return dados.estatisticasPecados.find(p => p.chave === chave);
+    }
+
+    //PARA DESENVOLVIMENTO
+    static async editarDadosBasicos(novosDadosBasicos) {
+        try {
+            const dados = await DataManager.load();
+            dados.basico[0] = { ...dados.basico[0], ...novosDadosBasicos };
+            await DataManager.save(dados);
+            return dados;
+        } catch (error) {
+            console.error('Erro ao editar dados básicos:', error);
+            return null;
+        }
+    }
+
+    static async editarQuantidadePecado(chave, novaQuantidade) {
+        try {
+            const dados = await DataManager.load();
+            const pecadoIndex = dados.estatisticasPecados.findIndex(p => p.chave === chave);
+
+            if (pecadoIndex !== -1) {
+                dados.estatisticasPecados[pecadoIndex].quantidade = novaQuantidade;
+                await DataManager.save(dados);
+                return dados;
+            }
+            return null;
+        } catch (error) {
+            console.error('Erro ao editar quantidade de pecado:', error);
+            return null;
+        }
+    }
+
+    static async editarHistoricoPecado(chave, novaQuantidadeHistorico) {
+        try {
+            const dados = await DataManager.load();
+
+            if (dados.historicoPecados[chave] !== undefined) {
+                dados.historicoPecados[chave] = novaQuantidadeHistorico;
+                await DataManager.save(dados);
+                return dados;
+            }
+            return null;
+        } catch (error) {
+            console.error('Erro ao editar histórico de pecado:', error);
+            return null;
+        }
+    }
+
+    static async resetarTodosOsDados() {
+        try {
+            const dadosIniciais = DataManager.estruturaInicial;
+            dadosIniciais.basico[0].dataInicioSequencia = DataManager.getHoje();
+            await AsyncStorage.setItem(DataManager.STORAGE_KEY, JSON.stringify(dadosIniciais));
+            return dadosIniciais;
+        } catch (error) {
+            console.error('Erro ao resetar dados:', error);
+            return null;
+        }
+    }
+
+    static async exportarDados() {
+        try {
+            const dados = await DataManager.load();
+            return JSON.stringify(dados, null, 2);
+        } catch (error) {
+            console.error('Erro ao exportar dados:', error);
+            return null;
+        }
+    }
+
+    static async importarDados(jsonString) {
+        try {
+            const novosDados = JSON.parse(jsonString);
+            await AsyncStorage.setItem(DataManager.STORAGE_KEY, JSON.stringify(novosDados));
+            return novosDados;
+        } catch (error) {
+            console.error('Erro ao importar dados:', error);
+            return null;
+        }
     }
 }

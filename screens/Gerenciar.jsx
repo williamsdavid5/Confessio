@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { useState, useEffect } from "react";
 import LocalDB from '../services/LocalDB';
 
@@ -27,50 +27,57 @@ export default function Gerenciar({ navigation }) {
 
         return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
-
     return (
-        <View style={styles.container}>
-            <View style={styles.divMetade}>
-                <View style={styles.bloco}>
-                    <Text style={styles.text}>Pendentes</Text>
-                    <Text style={styles.numeroBlocco}>{dados?.basico[0]?.quantidadeGeral}</Text>
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+            <View style={styles.viewCompleta}>
+                <View style={styles.divMetade}>
+                    <View style={styles.bloco}>
+                        <Text style={styles.text}>Pendentes</Text>
+                        <Text style={styles.numeroBlocco}>{dados?.basico[0]?.quantidadeGeral}</Text>
+                    </View>
+                    <View style={styles.bloco}>
+                        <Text style={styles.text}>Dias em estado de graça</Text>
+                        <Text style={styles.numeroBlocco}>{dados?.basico[0]?.diasSemPecado}</Text>
+                    </View>
                 </View>
-                <View style={styles.bloco}>
-                    <Text style={styles.text}>Dias em estado de graça</Text>
-                    <Text style={styles.numeroBlocco}>{dados?.basico[0]?.diasSemPecado}</Text>
+                <View style={styles.blocoCompleto}>
+                    <Text style={styles.text}>Última confissão: {formatarData(dados?.basico[0]?.dataUltimaConfissao)}</Text>
+                    <Text style={styles.text}>Data de início da sequência: {formatarData(dados?.basico[0]?.dataInicioSequencia)}</Text>
+                    <Text style={styles.text}>Máximo de dias em estado de graça: {dados?.basico[0]?.maximoDiasSemPecado} dia(s)</Text>
                 </View>
+                <Text style={styles.textoInformativo}>Todos os mandamentos por ordem de frequência:</Text>
+
+                {dados?.estatisticasPecados?.map((pecado, index) => (
+                    <View key={pecado.chave} style={styles.blocoCompleto}>
+                        <Text style={styles.textBold}>{pecado.nome}</Text>
+                        <Text style={styles.text}>Percentual: {pecado.porcentagem}%</Text>
+                    </View>
+                ))}
+
+                <Pressable style={styles.botao} onPress={() => navigation.navigate('EditarDados')}>
+                    <Text style={styles.text}>Editar dados</Text>
+                </Pressable>
             </View>
-            <View style={styles.blocoCompleto}>
-                <Text style={styles.text}>Última confissão: {formatarData(dados?.basico[0]?.dataUltimaConfissao)}</Text>
-                <Text style={styles.text}>Último dia em estado de graça: {dados?.basico[0]?.dataDiaSemPecado}</Text>
-                <Text style={styles.text}>Máximo de dias em estado de graça: {dados?.basico[0]?.maximoDiasSemPecado} dia(s)</Text>
-            </View>
-            <Text style={styles.textoInformativo}>Esses são os três mandamentos com mais registros de pecado:</Text>
-            <View style={styles.blocoCompleto}>
-                <Text style={styles.textBold}>{dados?.maisCometidos[0]?.referente}</Text>
-                <Text style={styles.text}>Quantidade total: {dados?.maisCometidos[0]?.quantidade}</Text>
-            </View>
-            <View style={styles.blocoCompleto}>
-                <Text style={styles.textBold}>{dados?.maisCometidos[1]?.referente}</Text>
-                <Text style={styles.text}>Quantidade total: {dados?.maisCometidos[1]?.quantidade}</Text>
-            </View>
-            <View style={styles.blocoCompleto}>
-                <Text style={styles.textBold}>{dados?.maisCometidos[2]?.referente}</Text>
-                <Text style={styles.text}>Quantidade total: {dados?.maisCometidos[2]?.quantidade}</Text>
-            </View>
-        </View>
+        </ScrollView>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        width: '100%',
+        height: '100%',
         backgroundColor: 'black',
-        alignItems: 'center'
+        // alignItems: 'center'
     },
     text: {
         fontSize: 14,
         color: 'white'
+    },
+    viewCompleta: {
+        paddingBottom: 50,
+        width: '100%',
+        height: '100%',
+        alignItems: 'center'
     },
     titulo: {
         fontFamily: 'OpenSansBold',
@@ -82,8 +89,8 @@ const styles = StyleSheet.create({
         borderColor: '#5d5d5d',
         borderWidth: 1,
         padding: 5,
-        width: 250,
         height: 50,
+        width: '90%',
         alignItems: 'center',
         justifyContent: 'center',
         margin: 10
@@ -127,5 +134,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         textAlignVertical: 'center',
         fontFamily: 'OpenSansBold'
+    },
+    scrollContent: {
+        alignItems: 'center',
+        paddingVertical: 20,
     }
 });
